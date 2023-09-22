@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:clickable="true"
+    android:background="@drawable/bg_button_3">
+
+    <TextView
+        android:id="@+id/sNomor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No"
+        android:textSize="@dimen/_10ssp"
+        android:textColor="@color/colorAccent"
+        android:padding="@dimen/_5sdp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/sNamaLatin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Text Arab"
+            android:textSize="@dimen/_10ssp"
+            android:textColor="@color/colorAccent"
+            android:padding="@dimen/_5sdp" />
+
+        <TextView
+            android:id="@+id/sTempatTurunArti"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Tempat Turun • Arti"
+            android:textSize="@dimen/_10ssp"
+            android:textColor="@color/colorButton"
+            android:padding="@dimen/_5sdp" />
+    </LinearLayout>
+</LinearLayout>

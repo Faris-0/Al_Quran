@@ -2,11 +2,20 @@ package com.yuuna.alquran;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -15,6 +24,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.yuuna.alquran.adapter.AyatAdapater;
+import com.yuuna.alquran.adapter.SuratAdapater;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,14 +33,16 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements SuratAdapater.ItemClickListener {
 
     private TextView tvSurat;
     private RecyclerView rvAyat;
     private ProgressBar pbLoad;
 
-    private String BASE_URL = "https://equran.id/api/v2/surat/", nama, namaLatin, tempatTurun, arti, deskripsi;
-    private Integer i = 1, nomor, jumlahAyat;
+    private Dialog dSurat;
+
+    private String BASE_URL = "https://equran.id/api/v2/surat/", nama, namaLatin, deskripsi, audio;
+    private Integer i = 1, jumlahAyat;
     private Boolean doubleBackToExit = false;
 
     @Override
@@ -39,29 +51,26 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         pbLoad = findViewById(R.id.mLoading);
-//        Drawable drawable = pbLoad.getIndeterminateDrawable().mutate();
-//        drawable.setColorFilter(Color.RED, android.graphics.PorterDuff.Mode.SRC_IN);
-//        pbLoad.setProgressDrawable(drawable);
 
         findViewById(R.id.mBack).setOnClickListener(v -> {
             i--;
             if (i == 0) i = 114;
+            surat();
             detailSurat();
         });
         findViewById(R.id.mNext).setOnClickListener(v -> {
             i++;
             if (i == 115) i = 1;
+            surat();
             detailSurat();
         });
         findViewById(R.id.mDetail).setOnClickListener(v -> {
             startActivity(new Intent(this, DetailActivity.class)
-                    .putExtra("nomor", nomor)
                     .putExtra("nama", nama)
                     .putExtra("namaLatin", namaLatin)
                     .putExtra("jumlahAyat", jumlahAyat)
-                    .putExtra("tempatTurun", tempatTurun)
-                    .putExtra("arti", arti)
                     .putExtra("deskripsi", deskripsi)
+                    .putExtra("audioFull", audio)
             );
         });
 
@@ -74,7 +83,7 @@ public class MainActivity extends Activity {
     }
 
     private void surat() {
-//        spbLoading.progressiveStart();
+        findViewById(R.id.mDetail).setEnabled(false);
         try {
             new Client().getOkHttpClient(BASE_URL, new Client.OKHttpNetwork() {
                 @Override
@@ -82,24 +91,28 @@ public class MainActivity extends Activity {
                     // Set to Data
                     try {
                         JSONArray jsonArray = new JSONObject(response).getJSONArray("data");
-                        String[] surat = new String[jsonArray.length()];
-                        for (int a = 0; a < jsonArray.length(); a++) {
-                            surat[a] = jsonArray.getJSONObject(a).getString("namaLatin") + " ("
-                                    + jsonArray.getJSONObject(a).getString("jumlahAyat") + " Ayat)\n"
-                                    + jsonArray.getJSONObject(a).getString("tempatTurun") + " • "
-                                    + jsonArray.getJSONObject(a).getString("arti");
-                        }
-                        runOnUiThread(() -> tvSurat.setOnClickListener(v -> new AlertDialog
-                                .Builder(MainActivity.this)
-                                .setTitle("Surat")
-                                .setItems(surat, (d, w) -> {
-                                    d.dismiss();
-                                    i = w + 1;
-                                    detailSurat();
-                                })
-                                .show()
-                            )
-                        );
+                        audio = String.valueOf(jsonArray.getJSONObject(i - 1).getJSONObject("audioFull"));
+                        ArrayList<JSONObject> jsonObjectArrayList = new ArrayList<>();
+                        for (int a = 0; a < jsonArray.length(); a++) jsonObjectArrayList.add(jsonArray.getJSONObject(a));
+                        runOnUiThread(() -> {
+                            tvSurat.setOnClickListener(v -> {
+                                        dSurat = new Dialog(MainActivity.this);
+                                        dSurat.setContentView(R.layout.dialog_surat);
+                                        dSurat.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                                        dSurat.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+                                        dSurat.findViewById(R.id.sClose).setOnClickListener(v1 -> dSurat.dismiss());
+
+                                        RecyclerView rvSurat = dSurat.findViewById(R.id.sSurat);
+                                        rvSurat.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+                                        SuratAdapater suratAdapater = new SuratAdapater(jsonObjectArrayList);
+                                        rvSurat.setAdapter(suratAdapater);
+                                        suratAdapater.setClickListener(MainActivity.this);
+
+                                        dSurat.show();
+                                    });
+                            findViewById(R.id.mDetail).setEnabled(true);
+                        });
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -118,7 +131,6 @@ public class MainActivity extends Activity {
     }
 
     private void detailSurat() {
-//        spbLoading.progressiveStart();
         pbLoad.setVisibility(View.VISIBLE);
         try {
             new Client().getOkHttpClient(BASE_URL + i, new Client.OKHttpNetwork() {
@@ -127,12 +139,9 @@ public class MainActivity extends Activity {
                     // Set to Data
                     try {
                         JSONObject jsonObject = new JSONObject(response).getJSONObject("data");
-                        nomor = jsonObject.getInt("nomor");
                         nama = jsonObject.getString("nama");
                         namaLatin = jsonObject.getString("namaLatin");
                         jumlahAyat = jsonObject.getInt("jumlahAyat");
-                        tempatTurun = jsonObject.getString("tempatTurun");
-                        arti = jsonObject.getString("arti");
                         deskripsi = jsonObject.getString("deskripsi");
                         JSONArray jsonArray = jsonObject.getJSONArray("ayat");
                         ArrayList<JSONObject> jsonObjectArrayList = new ArrayList<>();
@@ -140,7 +149,7 @@ public class MainActivity extends Activity {
                         runOnUiThread(() -> {
                             tvSurat.setText(namaLatin);
                             pbLoad.setVisibility(View.GONE);
-                            rvAyat.setAdapter(new AyatAdapater(jsonObjectArrayList, getApplicationContext()));
+                            rvAyat.setAdapter(new AyatAdapater(jsonObjectArrayList));
                         });
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -173,5 +182,17 @@ public class MainActivity extends Activity {
         Toast.makeText(this, "Tekan sekali lagi untuk keluar dari aplikasi", Toast.LENGTH_SHORT).show();
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> doubleBackToExit = false, 2000);
+    }
+
+    @Override
+    public void onItemClick(JSONObject jsonObject, View view, int position) {
+        try {
+            i = jsonObject.getInt("nomor");
+            surat();
+            detailSurat();
+            dSurat.dismiss();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 }

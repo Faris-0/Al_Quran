@@ -1,6 +1,5 @@
 package com.yuuna.alquran.adapter;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,16 +19,14 @@ import java.util.Locale;
 public class AyatAdapater extends RecyclerView.Adapter<AyatAdapater.Holder> {
 
     private ArrayList<JSONObject> jsonObjectDataList;
-    private Context mContext;
 
-    public AyatAdapater(ArrayList<JSONObject> jsonObjectArrayList, Context context) {
+    public AyatAdapater(ArrayList<JSONObject> jsonObjectArrayList) {
         this.jsonObjectDataList = jsonObjectArrayList;
-        this.mContext = context;
     }
 
     @Override
     public Holder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new Holder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_surah, parent, false));
+        return new Holder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_ayat, parent, false));
     }
 
     @Override
@@ -54,9 +51,9 @@ public class AyatAdapater extends RecyclerView.Adapter<AyatAdapater.Holder> {
 
         public Holder(View itemView) {
             super(itemView);
-            tvNomorAyat = itemView.findViewById(R.id.sNomorAyat);
-            tvTextArab = itemView.findViewById(R.id.sTextArab);
-            tvTextIndo = itemView.findViewById(R.id.sTextIndo);
+            tvNomorAyat = itemView.findViewById(R.id.aNomorAyat);
+            tvTextArab = itemView.findViewById(R.id.aTextArab);
+            tvTextIndo = itemView.findViewById(R.id.aTextIndo);
         }
     }
 }
