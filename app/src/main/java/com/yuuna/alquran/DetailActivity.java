@@ -10,11 +10,14 @@ import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.MediaItem;
 import com.yuuna.alquran.adapter.AudioAdapater;
 import com.yuuna.alquran.adapter.SuratAdapater;
 
@@ -26,9 +29,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class DetailActivity extends Activity implements AudioAdapater.ItemClickListener {
+//public class DetailActivity extends Activity {
 
     private TextView tvSurat, tvDeskripsi;
     private RecyclerView rvAudio;
+    private LinearLayout llDownload1, llAudio1, llDownload2, llAudio2, llDownload3, llAudio3, llDownload4, llAudio4, llDownload5, llAudio5;
+
+//    private ExoPlayer exoPlayer;
 
     private ArrayList<String> stringArrayList;
 
@@ -58,28 +65,16 @@ public class DetailActivity extends Activity implements AudioAdapater.ItemClickL
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        AudioAdapater audioAdapater = new AudioAdapater(stringArrayList);
+        AudioAdapater audioAdapater = new AudioAdapater(stringArrayList, this);
         rvAudio.setAdapter(audioAdapater);
         audioAdapater.setClickListener(DetailActivity.this);
     }
 
     @Override
     public void onItemClick(String s, View view, int position) {
-        MediaPlayer mediaPlayer = new MediaPlayer();
-        if (Build.VERSION.SDK_INT >= 26) {
-            mediaPlayer.setAudioAttributes(
-                    new AudioAttributes.Builder()
-                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .setUsage(AudioAttributes.USAGE_MEDIA)
-                            .build()
-            );
-        } else mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        try {
-            mediaPlayer.setDataSource(s);
-            mediaPlayer.prepare(); // might take long! (for buffering, etc)
-            mediaPlayer.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        exoPlayer = new ExoPlayer.Builder(this).build();
+//        exoPlayer.addMediaItem(MediaItem.fromUri(s));
+//        exoPlayer.prepare();
+//        exoPlayer.setPlayWhenReady(true);
     }
 }
