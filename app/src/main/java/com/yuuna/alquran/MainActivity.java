@@ -1,21 +1,23 @@
 package com.yuuna.alquran;
 
+import static com.yuuna.alquran.adapter.AudioAdapater.exoPlayer;
+
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Intent;
+import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.media.AudioAttributes;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
+import android.text.Html;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +25,7 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.yuuna.alquran.adapter.AudioAdapater;
 import com.yuuna.alquran.adapter.AyatAdapater;
 import com.yuuna.alquran.adapter.SuratAdapater;
 
@@ -30,20 +33,35 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 
-public class MainActivity extends Activity implements SuratAdapater.ItemClickListener {
+public class MainActivity extends Activity implements SuratAdapater.ItemClickListener, AudioAdapater.ItemClickListener {
 
-    private TextView tvSurat;
-    private RecyclerView rvAyat;
+    private TextView tvSurat, tvDeskripsi;
+    private RecyclerView rvAyat, rvAudio;
     private ProgressBar pbLoad;
+    private ImageView ivIcon;
 
     private Dialog dSurat;
+    // Progress Dialog
+    private ProgressDialog pDialog;
+    public static final int progress_bar_type = 0;
 
-    private String BASE_URL = "https://equran.id/api/v2/surat/", nama, namaLatin, deskripsi, audio;
-    private Integer i = 1, jumlahAyat;
-    private Boolean doubleBackToExit = false;
+    private ArrayList<String> stringArrayList;
+    private ArrayList<LinearLayout> linearLayoutArrayList;
+    private ArrayList<TextView> textViewArrayList;
+    private ArrayList<ProgressBar> progressBarArrayList;
+
+    private String BASE_URL = "https://equran.id/api/v2/surat/", namaLatin, deskripsi, audio, qori, namaFile;
+    private Integer i = 1, iPosition;
+    private Boolean doubleBackToExit = false, isDetail = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,33 +75,43 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
             if (i == 0) i = 114;
             surat();
             detailSurat();
+            if (exoPlayer != null) exoPlayer.stop();
         });
         findViewById(R.id.mNext).setOnClickListener(v -> {
             i++;
             if (i == 115) i = 1;
             surat();
             detailSurat();
+            if (exoPlayer != null) exoPlayer.stop();
         });
+        ivIcon = findViewById(R.id.mIcon);
         findViewById(R.id.mDetail).setOnClickListener(v -> {
-            startActivity(new Intent(this, DetailActivity.class)
-                    .putExtra("nama", nama)
-                    .putExtra("namaLatin", namaLatin)
-                    .putExtra("jumlahAyat", jumlahAyat)
-                    .putExtra("deskripsi", deskripsi)
-                    .putExtra("audioFull", audio)
-            );
+            if (isDetail) {
+                isDetail = false;
+                rvAyat.setVisibility(View.VISIBLE);
+                findViewById(R.id.mDetailLayout).setVisibility(View.GONE);
+                ivIcon.setImageResource(R.drawable.ic_file);
+            } else {
+                isDetail = true;
+                rvAyat.setVisibility(View.GONE);
+                findViewById(R.id.mDetailLayout).setVisibility(View.VISIBLE);
+                ivIcon.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
+            }
         });
 
         tvSurat = findViewById(R.id.mSurat);
         rvAyat = findViewById(R.id.mAyat);
         rvAyat.setLayoutManager(new LinearLayoutManager(this));
 
+        tvDeskripsi = findViewById(R.id.mDeskripsi);
+        rvAudio = findViewById(R.id.mAudioFull);
+        rvAudio.setLayoutManager(new LinearLayoutManager(this));
+
         surat();
         detailSurat();
     }
 
     private void surat() {
-        findViewById(R.id.mDetail).setEnabled(false);
         try {
             new Client().getOkHttpClient(BASE_URL, new Client.OKHttpNetwork() {
                 @Override
@@ -111,7 +139,19 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
 
                                         dSurat.show();
                                     });
-                            findViewById(R.id.mDetail).setEnabled(true);
+                            // Set RV Audio
+                            try {
+                                JSONObject jsonObject =  new JSONObject(audio);
+                                stringArrayList = new ArrayList<>();
+                                for (int i = 0; i < 5; i++) {
+                                    stringArrayList.add(jsonObject.getString("0" + (i + 1)));
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            AudioAdapater audioAdapater = new AudioAdapater(stringArrayList, MainActivity.this);
+                            rvAudio.setAdapter(audioAdapater);
+                            audioAdapater.setClickListener(MainActivity.this);
                         });
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -139,9 +179,7 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
                     // Set to Data
                     try {
                         JSONObject jsonObject = new JSONObject(response).getJSONObject("data");
-                        nama = jsonObject.getString("nama");
                         namaLatin = jsonObject.getString("namaLatin");
-                        jumlahAyat = jsonObject.getInt("jumlahAyat");
                         deskripsi = jsonObject.getString("deskripsi");
                         JSONArray jsonArray = jsonObject.getJSONArray("ayat");
                         ArrayList<JSONObject> jsonObjectArrayList = new ArrayList<>();
@@ -150,6 +188,10 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
                             tvSurat.setText(namaLatin);
                             pbLoad.setVisibility(View.GONE);
                             rvAyat.setAdapter(new AyatAdapater(jsonObjectArrayList));
+                            // Set Deskripsi
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                tvDeskripsi.setText(Html.fromHtml(deskripsi, Html.FROM_HTML_MODE_COMPACT));
+                            } else tvDeskripsi.setText(Html.fromHtml(deskripsi));
                         });
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -193,6 +235,108 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
             dSurat.dismiss();
         } catch (JSONException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onItemClick(String s, ArrayList<LinearLayout> lld, ArrayList<TextView> tvd, ArrayList<ProgressBar> pbd, int position) {
+        linearLayoutArrayList = new ArrayList<>(lld);
+        textViewArrayList = new ArrayList<>(tvd);
+        progressBarArrayList = new ArrayList<>(pbd);
+        iPosition = position;
+        if (position == 0) qori = "Abdullah Al-Juhany";
+        if (position == 1) qori = "Abdul Muhsin Al-Qasim";
+        if (position == 2) qori = "Abdurrahman as-Sudais";
+        if (position == 3) qori = "Ibrahim Al-Dossari";
+        if (position == 4) qori = "Misyari Rasyid Al-Afasi";
+        namaFile = namaLatin + "_" + qori + ".mp3";
+        new DownloadFileFromURL().execute(s);
+    }
+
+    /**
+     * Background Async Task to download file
+     * */
+    class DownloadFileFromURL extends AsyncTask<String, String, String> {
+
+        /**
+         * Before starting background thread Show Progress Bar Dialog
+         * */
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            showDialog(progress_bar_type);
+        }
+
+        /**
+         * Downloading file in background thread
+         * */
+        @Override
+        protected String doInBackground(String... f_url) {
+            int count;
+            try {
+                URL url = new URL(f_url[0]);
+                URLConnection connection = url.openConnection();
+                connection.connect();
+
+                // this will be useful so that you can show a tipical 0-100%
+                // progress bar
+                int lenghtOfFile = connection.getContentLength();
+
+                // download the file
+                InputStream input = new BufferedInputStream(url.openStream(),
+                        8192);
+
+                // Output stream
+                OutputStream output = new FileOutputStream(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + namaFile);
+
+                byte data[] = new byte[1024];
+
+                long total = 0;
+
+                while ((count = input.read(data)) != -1) {
+                    total += count;
+                    // publishing the progress....
+                    // After this onProgressUpdate will be called
+                    publishProgress("" + (int) ((total * 100) / lenghtOfFile));
+
+                    // writing data to file
+                    output.write(data, 0, count);
+                }
+
+                // flushing output
+                output.flush();
+
+                // closing streams
+                output.close();
+                input.close();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        /**
+         * Updating progress bar
+         * */
+        protected void onProgressUpdate(String... progress) {
+            // setting progress percentage
+            linearLayoutArrayList.get(iPosition).setVisibility(View.VISIBLE);
+            textViewArrayList.get(iPosition).setText(String.valueOf(Integer.parseInt(progress[0])));
+            progressBarArrayList.get(iPosition).setVisibility(View.VISIBLE);
+            progressBarArrayList.get(iPosition).setProgress(Integer.parseInt(progress[0]));
+        }
+
+        /**
+         * After completing background task Dismiss the progress dialog
+         * **/
+        @Override
+        protected void onPostExecute(String file_url) {
+            // dismiss the dialog after the file was downloaded
+            linearLayoutArrayList.get(iPosition).setVisibility(View.GONE);
+            progressBarArrayList.get(iPosition).setVisibility(View.GONE);
+//            dismissDialog(progress_bar_type);
         }
     }
 }

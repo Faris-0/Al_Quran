@@ -61,42 +61,80 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/_10sdp"
-                android:padding="@dimen/_4sdp"
-                android:orientation="horizontal"
-                android:gravity="end">
+                android:orientation="horizontal">
 
                 <LinearLayout
-                    android:id="@+id/aDownload"
-                    android:layout_width="@dimen/_55sdp"
-                    android:layout_height="@dimen/_25sdp"
-                    android:layout_marginEnd="@dimen/_8sdp"
-                    android:gravity="center"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="@drawable/bg_button_1">
+                    android:id="@+id/aPercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:visibility="gone"
+                    android:orientation="horizontal">
 
-                    <ImageView
-                        android:layout_width="@dimen/_16sdp"
-                        android:layout_height="@dimen/_16sdp"
-                        android:src="@drawable/ic_download" />
+                    <TextView
+                        android:id="@+id/aProgress"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="@dimen/_11ssp"
+                        android:textColor="@color/colorAccent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="%"
+                        android:textSize="@dimen/_11ssp"
+                        android:textColor="@color/colorAccent" />
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/aAudio"
-                    android:layout_width="@dimen/_55sdp"
-                    android:layout_height="@dimen/_25sdp"
-                    android:gravity="center"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="@drawable/bg_button_1">
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/_4sdp"
+                    android:orientation="horizontal"
+                    android:gravity="end">
 
-                    <ImageView
-                        android:id="@+id/aIcon"
-                        android:layout_width="@dimen/_16sdp"
-                        android:layout_height="@dimen/_16sdp"
-                        android:src="@drawable/ic_play" />
+                    <LinearLayout
+                        android:id="@+id/aDownload"
+                        android:layout_width="@dimen/_55sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_marginEnd="@dimen/_8sdp"
+                        android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="@drawable/bg_button_1">
+
+                        <ImageView
+                            android:layout_width="@dimen/_16sdp"
+                            android:layout_height="@dimen/_16sdp"
+                            android:src="@drawable/ic_download" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/aAudio"
+                        android:layout_width="@dimen/_55sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="@drawable/bg_button_1">
+
+                        <ImageView
+                            android:id="@+id/aIcon"
+                            android:layout_width="@dimen/_16sdp"
+                            android:layout_height="@dimen/_16sdp"
+                            android:src="@drawable/ic_play" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/aLoading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:progressTint="@color/colorButton"
+                android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>
