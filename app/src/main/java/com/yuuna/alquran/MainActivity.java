@@ -5,6 +5,7 @@ import static com.yuuna.alquran.adapter.AudioAdapater.exoPlayer;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
@@ -22,6 +23,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -50,9 +52,6 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
     private ImageView ivIcon;
 
     private Dialog dSurat;
-    // Progress Dialog
-    private ProgressDialog pDialog;
-    public static final int progress_bar_type = 0;
 
     private ArrayList<String> stringArrayList;
     private ArrayList<LinearLayout> linearLayoutArrayList;
@@ -63,12 +62,20 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
     private Integer i = 1, iPosition;
     private Boolean doubleBackToExit = false, isDetail = false;
 
+    private static String[] PERMISSIONS_STORAGE = {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         pbLoad = findViewById(R.id.mLoading);
+
+        int permission = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permission != PackageManager.PERMISSION_GRANTED) ActivityCompat.requestPermissions(this, PERMISSIONS_STORAGE, 1);
 
         findViewById(R.id.mBack).setOnClickListener(v -> {
             i--;
@@ -264,7 +271,6 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            showDialog(progress_bar_type);
         }
 
         /**
@@ -336,7 +342,6 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
             // dismiss the dialog after the file was downloaded
             linearLayoutArrayList.get(iPosition).setVisibility(View.GONE);
             progressBarArrayList.get(iPosition).setVisibility(View.GONE);
-//            dismissDialog(progress_bar_type);
         }
     }
 }
