@@ -239,6 +239,7 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
             i = jsonObject.getInt("nomor");
             surat();
             detailSurat();
+            if (exoPlayer != null) exoPlayer.stop();
             dSurat.dismiss();
         } catch (JSONException e) {
             e.printStackTrace();
