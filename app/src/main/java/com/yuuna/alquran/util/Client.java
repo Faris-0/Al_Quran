@@ -1,4 +1,4 @@
-package com.yuuna.alquran;
+package com.yuuna.alquran.util;
 
 import java.io.IOException;
 

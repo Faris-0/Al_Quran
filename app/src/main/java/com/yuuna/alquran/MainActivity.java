@@ -4,7 +4,6 @@ import static com.yuuna.alquran.adapter.AudioAdapater.exoPlayer;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -14,9 +13,12 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
 import android.text.Html;
+import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -24,12 +26,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.yuuna.alquran.adapter.AudioAdapater;
 import com.yuuna.alquran.adapter.AyatAdapater;
 import com.yuuna.alquran.adapter.SuratAdapater;
+import com.yuuna.alquran.util.Client;
+import com.yuuna.alquran.util.CustomLinearLayoutManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -108,11 +111,11 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
 
         tvSurat = findViewById(R.id.mSurat);
         rvAyat = findViewById(R.id.mAyat);
-        rvAyat.setLayoutManager(new LinearLayoutManager(this));
+        rvAyat.setLayoutManager(new CustomLinearLayoutManager(this));
 
         tvDeskripsi = findViewById(R.id.mDeskripsi);
         rvAudio = findViewById(R.id.mAudioFull);
-        rvAudio.setLayoutManager(new LinearLayoutManager(this));
+        rvAudio.setLayoutManager(new CustomLinearLayoutManager(this));
 
         surat();
         detailSurat();
@@ -131,21 +134,49 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
                         for (int a = 0; a < jsonArray.length(); a++) jsonObjectArrayList.add(jsonArray.getJSONObject(a));
                         runOnUiThread(() -> {
                             tvSurat.setOnClickListener(v -> {
-                                        dSurat = new Dialog(MainActivity.this);
-                                        dSurat.setContentView(R.layout.dialog_surat);
-                                        dSurat.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-                                        dSurat.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                                dSurat = new Dialog(MainActivity.this);
+                                dSurat.setContentView(R.layout.dialog_surat);
+                                dSurat.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                                dSurat.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
-                                        dSurat.findViewById(R.id.sClose).setOnClickListener(v1 -> dSurat.dismiss());
+                                dSurat.findViewById(R.id.sClose).setOnClickListener(v1 -> dSurat.dismiss());
 
-                                        RecyclerView rvSurat = dSurat.findViewById(R.id.sSurat);
-                                        rvSurat.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-                                        SuratAdapater suratAdapater = new SuratAdapater(jsonObjectArrayList);
-                                        rvSurat.setAdapter(suratAdapater);
-                                        suratAdapater.setClickListener(MainActivity.this);
+                                SuratAdapater suratAdapater = new SuratAdapater(jsonObjectArrayList);
 
-                                        dSurat.show();
-                                    });
+                                EditText etSearch = dSurat.findViewById(R.id.sFind);
+                                LinearLayout llClear = dSurat.findViewById(R.id.sClear);
+                                etSearch.addTextChangedListener(new TextWatcher() {
+                                    @Override
+                                    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                                    }
+
+                                    @Override
+                                    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                                    }
+
+                                    @Override
+                                    public void afterTextChanged(Editable editable) {
+                                        suratAdapater.getFilter().filter(editable);
+                                        if (editable.toString().equals("")) llClear.setVisibility(View.GONE);
+                                        else llClear.setVisibility(View.VISIBLE);
+                                    }
+                                });
+
+                                llClear.setOnClickListener(v1 -> {
+                                    etSearch.setText("");
+                                    llClear.setVisibility(View.GONE);
+                                    suratAdapater.getFilter().filter("");
+                                });
+
+                                RecyclerView rvSurat = dSurat.findViewById(R.id.sSurat);
+                                rvSurat.setLayoutManager(new CustomLinearLayoutManager(MainActivity.this));
+                                rvSurat.setAdapter(suratAdapater);
+                                suratAdapater.setClickListener(MainActivity.this);
+
+                                dSurat.show();
+                            });
                             // Set RV Audio
                             try {
                                 JSONObject jsonObject =  new JSONObject(audio);
@@ -234,7 +265,7 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
     }
 
     @Override
-    public void onItemClick(JSONObject jsonObject, View view, int position) {
+    public void onItemClick(JSONObject jsonObject) {
         try {
             i = jsonObject.getInt("nomor");
             surat();

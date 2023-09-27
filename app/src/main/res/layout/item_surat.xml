@@ -3,16 +3,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:clickable="true"
     android:background="@drawable/bg_button_3">
 
     <TextView
         android:id="@+id/sNomor"
-        android:layout_width="wrap_content"
+        android:layout_width="@dimen/_30sdp"
         android:layout_height="wrap_content"
         android:text="No"
         android:textSize="@dimen/_10ssp"
         android:textColor="@color/colorAccent"
+        android:gravity="center"
         android:padding="@dimen/_5sdp" />
 
     <LinearLayout
@@ -27,6 +27,7 @@
             android:text="Text Arab"
             android:textSize="@dimen/_10ssp"
             android:textColor="@color/colorAccent"
+            android:textStyle="bold"
             android:padding="@dimen/_5sdp" />
 
         <TextView

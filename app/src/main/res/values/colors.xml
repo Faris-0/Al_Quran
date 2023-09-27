@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="white">#FFFFFFFF</color>
+    <color name="gray">#808080</color>
     <!-- COLOR MAIN -->
     <color name="colorAccent">#1E3D1D</color>
     <color name="colorButton">#5D705D</color>

@@ -3,6 +3,8 @@ package com.yuuna.alquran.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -14,14 +16,15 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class SuratAdapater extends RecyclerView.Adapter<SuratAdapater.Holder> {
+public class SuratAdapater extends RecyclerView.Adapter<SuratAdapater.Holder> implements Filterable {
 
-    private ArrayList<JSONObject> jsonObjectDataList;
+    private ArrayList<JSONObject> jsonObjectDataList, listSurat;
 
     private ItemClickListener clickListener;
 
     public SuratAdapater(ArrayList<JSONObject> jsonObjectArrayList) {
         this.jsonObjectDataList = jsonObjectArrayList;
+        this.listSurat = jsonObjectArrayList;
     }
 
     @Override
@@ -31,7 +34,7 @@ public class SuratAdapater extends RecyclerView.Adapter<SuratAdapater.Holder> {
 
     @Override
     public void onBindViewHolder(Holder holder, int position) {
-        JSONObject jsonObject = jsonObjectDataList.get(position);
+        JSONObject jsonObject = listSurat.get(position);
         try {
             holder.tvNomor.setText(jsonObject.getInt("nomor") + ".");
             holder.tvNamaLatin.setText(jsonObject.getString("namaLatin"));
@@ -43,11 +46,47 @@ public class SuratAdapater extends RecyclerView.Adapter<SuratAdapater.Holder> {
 
     @Override
     public int getItemCount() {
-        return jsonObjectDataList.size();
+        return listSurat.size();
+    }
+
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence charSequence) {
+
+                String searchString = charSequence.toString().toLowerCase().trim();
+
+                if (searchString.isEmpty()) {
+                    listSurat = jsonObjectDataList;
+                } else {
+                    ArrayList<JSONObject> tempFilteredList = new ArrayList<>();
+                    for (JSONObject jsonObject : jsonObjectDataList) {
+                        try {
+                            if (jsonObject.getString("namaLatin").toLowerCase().contains(searchString)) tempFilteredList.add(jsonObject);
+                            else if (jsonObject.getString("arti").toLowerCase().contains(searchString)) tempFilteredList.add(jsonObject);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    listSurat = tempFilteredList;
+                }
+
+                FilterResults filterResults = new FilterResults();
+                filterResults.values = listSurat;
+                return filterResults;
+            }
+
+            @Override
+            protected void publishResults(CharSequence charSequence, FilterResults filterResults) {
+                listSurat = (ArrayList<JSONObject>) filterResults.values;
+                notifyDataSetChanged();
+            }
+        };
     }
 
     public interface ItemClickListener {
-        void onItemClick(JSONObject jsonObject, View view, int position);
+        void onItemClick(JSONObject jsonObject);
     }
 
     public void setClickListener(ItemClickListener clickListener) {
@@ -64,7 +103,7 @@ public class SuratAdapater extends RecyclerView.Adapter<SuratAdapater.Holder> {
             tvTempatTurunArti = itemView.findViewById(R.id.sTempatTurunArti);
 
             itemView.setOnClickListener(v -> {
-                if (clickListener != null) clickListener.onItemClick(jsonObjectDataList.get(getAdapterPosition()), v, getAdapterPosition());
+                if (clickListener != null) clickListener.onItemClick(listSurat.get(getAdapterPosition()));
             });
         }
     }
