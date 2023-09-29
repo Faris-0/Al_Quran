@@ -1,7 +1,6 @@
 package com.yuuna.alquran.adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +18,7 @@ import com.yuuna.alquran.R;
 
 import java.util.ArrayList;
 
-public class AudioAdapater extends RecyclerView.Adapter<AudioAdapater.Holder> {
+public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.Holder> {
 
     private ArrayList<String> stringDataList;
     private ArrayList<Boolean> booleanDataList;
@@ -37,7 +36,7 @@ public class AudioAdapater extends RecyclerView.Adapter<AudioAdapater.Holder> {
     private Integer iPause;
     private Boolean isPlaying = false;
 
-    public AudioAdapater(ArrayList<String> stringArrayList, Context context) {
+    public AudioAdapter(ArrayList<String> stringArrayList, Context context) {
         this.stringDataList = stringArrayList;
         this.mContext = context;
     }

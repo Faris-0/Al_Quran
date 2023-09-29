@@ -1,6 +1,6 @@
 package com.yuuna.alquran;
 
-import static com.yuuna.alquran.adapter.AudioAdapater.exoPlayer;
+import static com.yuuna.alquran.adapter.AudioAdapter.exoPlayer;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -28,9 +28,9 @@ import android.widget.Toast;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.yuuna.alquran.adapter.AudioAdapater;
-import com.yuuna.alquran.adapter.AyatAdapater;
-import com.yuuna.alquran.adapter.SuratAdapater;
+import com.yuuna.alquran.adapter.AudioAdapter;
+import com.yuuna.alquran.adapter.AyatAdapter;
+import com.yuuna.alquran.adapter.SuratAdapter;
 import com.yuuna.alquran.util.Client;
 import com.yuuna.alquran.util.CustomLinearLayoutManager;
 
@@ -47,7 +47,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 
-public class MainActivity extends Activity implements SuratAdapater.ItemClickListener, AudioAdapater.ItemClickListener {
+public class MainActivity extends Activity implements SuratAdapter.ItemClickListener, AudioAdapter.ItemClickListener {
 
     private TextView tvSurat, tvDeskripsi;
     private RecyclerView rvAyat, rvAudio;
@@ -141,7 +141,7 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
 
                                 dSurat.findViewById(R.id.sClose).setOnClickListener(v1 -> dSurat.dismiss());
 
-                                SuratAdapater suratAdapater = new SuratAdapater(jsonObjectArrayList);
+                                SuratAdapter suratAdapter = new SuratAdapter(jsonObjectArrayList);
 
                                 EditText etSearch = dSurat.findViewById(R.id.sFind);
                                 LinearLayout llClear = dSurat.findViewById(R.id.sClear);
@@ -158,7 +158,7 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
 
                                     @Override
                                     public void afterTextChanged(Editable editable) {
-                                        suratAdapater.getFilter().filter(editable);
+                                        suratAdapter.getFilter().filter(editable);
                                         if (editable.toString().equals("")) llClear.setVisibility(View.GONE);
                                         else llClear.setVisibility(View.VISIBLE);
                                     }
@@ -167,13 +167,13 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
                                 llClear.setOnClickListener(v1 -> {
                                     etSearch.setText("");
                                     llClear.setVisibility(View.GONE);
-                                    suratAdapater.getFilter().filter("");
+                                    suratAdapter.getFilter().filter("");
                                 });
 
                                 RecyclerView rvSurat = dSurat.findViewById(R.id.sSurat);
                                 rvSurat.setLayoutManager(new CustomLinearLayoutManager(MainActivity.this));
-                                rvSurat.setAdapter(suratAdapater);
-                                suratAdapater.setClickListener(MainActivity.this);
+                                rvSurat.setAdapter(suratAdapter);
+                                suratAdapter.setClickListener(MainActivity.this);
 
                                 dSurat.show();
                             });
@@ -187,9 +187,9 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
-                            AudioAdapater audioAdapater = new AudioAdapater(stringArrayList, MainActivity.this);
-                            rvAudio.setAdapter(audioAdapater);
-                            audioAdapater.setClickListener(MainActivity.this);
+                            AudioAdapter audioAdapter = new AudioAdapter(stringArrayList, MainActivity.this);
+                            rvAudio.setAdapter(audioAdapter);
+                            audioAdapter.setClickListener(MainActivity.this);
                         });
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -225,7 +225,7 @@ public class MainActivity extends Activity implements SuratAdapater.ItemClickLis
                         runOnUiThread(() -> {
                             tvSurat.setText(namaLatin);
                             pbLoad.setVisibility(View.GONE);
-                            rvAyat.setAdapter(new AyatAdapater(jsonObjectArrayList));
+                            rvAyat.setAdapter(new AyatAdapter(jsonObjectArrayList));
                             // Set Deskripsi
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                 tvDeskripsi.setText(Html.fromHtml(deskripsi, Html.FROM_HTML_MODE_COMPACT));

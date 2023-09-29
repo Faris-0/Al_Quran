@@ -16,11 +16,11 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
-public class AyatAdapater extends RecyclerView.Adapter<AyatAdapater.Holder> {
+public class AyatAdapter extends RecyclerView.Adapter<AyatAdapter.Holder> {
 
     private ArrayList<JSONObject> jsonObjectDataList;
 
-    public AyatAdapater(ArrayList<JSONObject> jsonObjectArrayList) {
+    public AyatAdapter(ArrayList<JSONObject> jsonObjectArrayList) {
         this.jsonObjectDataList = jsonObjectArrayList;
     }
 

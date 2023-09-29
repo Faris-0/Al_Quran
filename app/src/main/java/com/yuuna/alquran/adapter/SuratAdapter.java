@@ -16,13 +16,13 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class SuratAdapater extends RecyclerView.Adapter<SuratAdapater.Holder> implements Filterable {
+public class SuratAdapter extends RecyclerView.Adapter<SuratAdapter.Holder> implements Filterable {
 
     private ArrayList<JSONObject> jsonObjectDataList, listSurat;
 
     private ItemClickListener clickListener;
 
-    public SuratAdapater(ArrayList<JSONObject> jsonObjectArrayList) {
+    public SuratAdapter(ArrayList<JSONObject> jsonObjectArrayList) {
         this.jsonObjectDataList = jsonObjectArrayList;
         this.listSurat = jsonObjectArrayList;
     }
