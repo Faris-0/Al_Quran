@@ -159,11 +159,11 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.Holder> {
 
             llDownload.setOnClickListener(v -> {
                 if (clickListener != null) clickListener.onItemClick(
-                        stringDataList.get(getAdapterPosition()),
+                        stringDataList.get(getBindingAdapterPosition()),
                         linearLayoutDataList,
                         textViewDataList,
                         progressBarDataList,
-                        getAdapterPosition()
+                        getBindingAdapterPosition()
                 );
             });
         }

@@ -103,7 +103,7 @@ public class SuratAdapter extends RecyclerView.Adapter<SuratAdapter.Holder> impl
             tvTempatTurunArti = itemView.findViewById(R.id.sTempatTurunArti);
 
             itemView.setOnClickListener(v -> {
-                if (clickListener != null) clickListener.onItemClick(listSurat.get(getAdapterPosition()));
+                if (clickListener != null) clickListener.onItemClick(listSurat.get(getBindingAdapterPosition()));
             });
         }
     }
