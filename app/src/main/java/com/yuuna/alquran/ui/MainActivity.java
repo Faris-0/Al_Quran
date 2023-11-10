@@ -1,4 +1,4 @@
-package com.yuuna.alquran;
+package com.yuuna.alquran.ui;
 
 import static com.yuuna.alquran.adapter.AudioAdapter.exoPlayer;
 
@@ -28,6 +28,7 @@ import android.widget.Toast;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.yuuna.alquran.R;
 import com.yuuna.alquran.adapter.AudioAdapter;
 import com.yuuna.alquran.adapter.AyatAdapter;
 import com.yuuna.alquran.adapter.SuratAdapter;
