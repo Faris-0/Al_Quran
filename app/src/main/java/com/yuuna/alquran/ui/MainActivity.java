@@ -97,17 +97,10 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
         });
         ivIcon = findViewById(R.id.mIcon);
         findViewById(R.id.mDetail).setOnClickListener(v -> {
-            if (isDetail) {
-                isDetail = false;
-                rvAyat.setVisibility(View.VISIBLE);
-                findViewById(R.id.mDetailLayout).setVisibility(View.GONE);
-                ivIcon.setImageResource(R.drawable.ic_file);
-            } else {
-                isDetail = true;
-                rvAyat.setVisibility(View.GONE);
-                findViewById(R.id.mDetailLayout).setVisibility(View.VISIBLE);
-                ivIcon.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
-            }
+            isDetail = !isDetail;
+            rvAyat.setVisibility(isDetail ? View.VISIBLE : View.GONE);
+            findViewById(R.id.mDetailLayout).setVisibility(isDetail ? View.GONE : View.VISIBLE);
+            ivIcon.setImageResource(isDetail ? R.drawable.ic_file : android.R.drawable.ic_menu_close_clear_cancel);
         });
 
         tvSurat = findViewById(R.id.mSurat);
@@ -160,7 +153,7 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
                                     @Override
                                     public void afterTextChanged(Editable editable) {
                                         suratAdapter.getFilter().filter(editable);
-                                        if (editable.toString().equals("")) llClear.setVisibility(View.GONE);
+                                        if (editable.toString().isEmpty()) llClear.setVisibility(View.GONE);
                                         else llClear.setVisibility(View.VISIBLE);
                                     }
                                 });
@@ -182,9 +175,7 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
                             try {
                                 JSONObject jsonObject =  new JSONObject(audio);
                                 stringArrayList = new ArrayList<>();
-                                for (int i = 0; i < 5; i++) {
-                                    stringArrayList.add(jsonObject.getString("0" + (i + 1)));
-                                }
+                                for (int i = 0; i < 5; i++) stringArrayList.add(jsonObject.getString("0" + (i + 1)));
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
@@ -228,9 +219,8 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
                             pbLoad.setVisibility(View.GONE);
                             rvAyat.setAdapter(new AyatAdapter(jsonObjectArrayList));
                             // Set Deskripsi
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                tvDeskripsi.setText(Html.fromHtml(deskripsi, Html.FROM_HTML_MODE_COMPACT));
-                            } else tvDeskripsi.setText(Html.fromHtml(deskripsi));
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) tvDeskripsi.setText(Html.fromHtml(deskripsi, Html.FROM_HTML_MODE_COMPACT));
+                            else tvDeskripsi.setText(Html.fromHtml(deskripsi));
                         });
                     } catch (JSONException e) {
                         e.printStackTrace();
