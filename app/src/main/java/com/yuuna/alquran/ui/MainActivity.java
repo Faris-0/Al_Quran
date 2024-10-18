@@ -97,10 +97,10 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
         });
         ivIcon = findViewById(R.id.mIcon);
         findViewById(R.id.mDetail).setOnClickListener(v -> {
-            isDetail = !isDetail;
             rvAyat.setVisibility(isDetail ? View.VISIBLE : View.GONE);
             findViewById(R.id.mDetailLayout).setVisibility(isDetail ? View.GONE : View.VISIBLE);
             ivIcon.setImageResource(isDetail ? R.drawable.ic_file : android.R.drawable.ic_menu_close_clear_cancel);
+            isDetail = !isDetail;
         });
 
         tvSurat = findViewById(R.id.mSurat);
@@ -318,7 +318,7 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
                 // Output stream
                 OutputStream output = new FileOutputStream(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + namaFile);
 
-                byte data[] = new byte[1024];
+                byte[] data = new byte[1024];
 
                 long total = 0;
 

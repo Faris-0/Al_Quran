@@ -9,11 +9,11 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.Player;
+import androidx.media3.exoplayer.ExoPlayer;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.MediaItem;
-import com.google.android.exoplayer2.Player;
 import com.yuuna.alquran.R;
 
 import java.util.ArrayList;
@@ -96,13 +96,8 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.Holder> {
     private void setPlayer(Integer position) {
         booleanDataList = new ArrayList<>();
         for (int i = 0; i < stringDataList.size(); i++) {
-            if (position == i) {
-                booleanDataList.add(true);
-                iconDataList.get(i).setImageResource(R.drawable.ic_pause);
-            } else {
-                booleanDataList.add(false);
-                iconDataList.get(i).setImageResource(R.drawable.ic_play);
-            }
+            booleanDataList.add(position == i);
+            iconDataList.get(i).setImageResource(position == i ? R.drawable.ic_pause : R.drawable.ic_play);
         }
         exoPlayer.stop();
         exoPlayer = new ExoPlayer.Builder(mContext).build();
