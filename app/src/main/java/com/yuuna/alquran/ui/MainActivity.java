@@ -4,6 +4,7 @@ import static com.yuuna.alquran.adapter.AudioAdapter.exoPlayer;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -65,6 +66,7 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
     private String BASE_URL = "https://equran.id/api/v2/surat/", namaLatin, deskripsi, audio, qori, namaFile;
     private Integer i = 1, iPosition;
     private Boolean doubleBackToExit = false, isDetail = false;
+    public static Boolean isAlFatihah = false, isBasmalah = false;
 
     private static String[] PERMISSIONS_STORAGE = {
             android.Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -213,7 +215,22 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
                         deskripsi = jsonObject.getString("deskripsi");
                         JSONArray jsonArray = jsonObject.getJSONArray("ayat");
                         ArrayList<JSONObject> jsonObjectArrayList = new ArrayList<>();
-                        for (int a = 0; a < jsonArray.length(); a++) jsonObjectArrayList.add(jsonArray.getJSONObject(a));
+                        SharedPreferences spBasmalah = getSharedPreferences("Al Qur'an", MODE_PRIVATE);
+                        if (namaLatin.equals("Al-Fatihah")) {
+                            isAlFatihah = true;
+                            isBasmalah = true;
+                            spBasmalah.edit().putString("basmalah", String.valueOf(jsonArray.getJSONObject(0))).apply();
+                            for (int a = 0; a < jsonArray.length(); a++) jsonObjectArrayList.add(jsonArray.getJSONObject(a));
+                        } else if (namaLatin.equals("At-Taubah")) {
+                            isAlFatihah = false;
+                            isBasmalah = false;
+                            for (int a = 0; a < jsonArray.length(); a++) jsonObjectArrayList.add(jsonArray.getJSONObject(a));
+                        } else {
+                            isAlFatihah = false;
+                            isBasmalah = true;
+                            jsonObjectArrayList.add(new JSONObject(spBasmalah.getString("basmalah", "")));
+                            for (int a = 0; a < jsonArray.length(); a++) jsonObjectArrayList.add(jsonArray.getJSONObject(a));
+                        }
                         runOnUiThread(() -> {
                             tvSurat.setText(namaLatin);
                             pbLoad.setVisibility(View.GONE);

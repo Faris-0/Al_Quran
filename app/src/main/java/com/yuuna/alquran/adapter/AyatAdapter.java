@@ -1,5 +1,8 @@
 package com.yuuna.alquran.adapter;
 
+import static com.yuuna.alquran.ui.MainActivity.isAlFatihah;
+import static com.yuuna.alquran.ui.MainActivity.isBasmalah;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,6 +36,7 @@ public class AyatAdapter extends RecyclerView.Adapter<AyatAdapter.Holder> {
     public void onBindViewHolder(Holder holder, int position) {
         JSONObject jsonObject = jsonObjectDataList.get(position);
         try {
+            holder.tvNomorAyat.setVisibility(isAlFatihah && position == 0 ? View.VISIBLE : (isBasmalah && position == 0 ? View.INVISIBLE : View.VISIBLE));
             holder.tvNomorAyat.setText("\u06DD"+ NumberFormat.getInstance(Locale.forLanguageTag("AR")).format(jsonObject.getInt("nomorAyat")));
             holder.tvTextArab.setText(jsonObject.getString("teksArab"));
             holder.tvTextIndo.setText(jsonObject.getString("teksIndonesia"));
