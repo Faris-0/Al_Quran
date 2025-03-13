@@ -6,12 +6,13 @@
 
 ### Introduction
 
-This Android Al Qur'an app is based on the open source.
+This Android Al Qur'an app is based on the open source. Al Qur'an based from https://equran.id
 
 ### Features
 ```
-- Streaming Audio per Surah
-- Download Audio per Surah
+- Streaming Audio per Ayat
+- Streaming Audio per Surat
+- Download Audio per Surat
 ```
 
 ### Contact Info

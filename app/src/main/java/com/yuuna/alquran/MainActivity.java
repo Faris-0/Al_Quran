@@ -1,6 +1,7 @@
-package com.yuuna.alquran.ui;
+package com.yuuna.alquran;
 
-import static com.yuuna.alquran.adapter.AudioAdapter.exoPlayer;
+import static com.yuuna.alquran.adapter.AudioAdapter.epAudioFull;
+import static com.yuuna.alquran.adapter.AyatAdapter.epAudioPartial;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -19,17 +20,20 @@ import android.text.Html;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
+import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.yuuna.alquran.R;
 import com.yuuna.alquran.adapter.AudioAdapter;
 import com.yuuna.alquran.adapter.AyatAdapter;
 import com.yuuna.alquran.adapter.SuratAdapter;
@@ -52,9 +56,11 @@ import java.util.ArrayList;
 public class MainActivity extends Activity implements SuratAdapter.ItemClickListener, AudioAdapter.ItemClickListener {
 
     private TextView tvSurat, tvDeskripsi;
-    private RecyclerView rvAyat, rvAudio;
+    public static NestedScrollView nsvAyatLayout;
+    public static RecyclerView rvAyat;
+    private RecyclerView rvAudio;
+    private Spinner sPengisiSuara, sUkuranFont;
     private ProgressBar pbLoad;
-    private ImageView ivIcon;
 
     private Dialog dSurat;
 
@@ -63,9 +69,14 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
     private ArrayList<TextView> textViewArrayList;
     private ArrayList<ProgressBar> progressBarArrayList;
 
-    private String BASE_URL = "https://equran.id/api/v2/surat/", namaLatin, deskripsi, audio, qori, namaFile;
-    private Integer i = 1, iPosition;
-    private Boolean doubleBackToExit = false, isDetail = false;
+    public static SharedPreferences spAlQuran;
+    private String BASE_URL = "https://equran.id/api/v2/surat/", namaLatin, deskripsi, audio, namaFile;
+    public static String[] qori = new String[]{"Abdullah Al-Juhany", "Abdul Muhsin Al-Qasim", "Abdurrahman as-Sudais", "Ibrahim Al-Dossari", "Misyari Rasyid Al-Afasi"};
+    public static String[] qori_api = new String[]{"Abdullah-Al-Juhany", "Abdul-Muhsin-Al-Qasim", "Abdurrahman-as-Sudais", "Ibrahim-Al-Dossari", "Misyari-Rasyid-Al-Afasi"};
+    private String[] ukuranFont = new String[]{"11", "12", "13", "14", "15", "16"};
+    public static Integer iSurat = 1;
+    private Integer iPosition;
+    private Boolean doubleBackToExit = false;
     public static Boolean isAlFatihah = false, isBasmalah = false;
 
     private static String[] PERMISSIONS_STORAGE = {
@@ -78,43 +89,84 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        pbLoad = findViewById(R.id.mLoading);
-
         int permission = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (permission != PackageManager.PERMISSION_GRANTED) ActivityCompat.requestPermissions(this, PERMISSIONS_STORAGE, 1);
 
-        findViewById(R.id.mBack).setOnClickListener(v -> {
-            i--;
-            if (i == 0) i = 114;
-            surat();
-            detailSurat();
-            if (exoPlayer != null) exoPlayer.stop();
-        });
-        findViewById(R.id.mNext).setOnClickListener(v -> {
-            i++;
-            if (i == 115) i = 1;
-            surat();
-            detailSurat();
-            if (exoPlayer != null) exoPlayer.stop();
-        });
-        ivIcon = findViewById(R.id.mIcon);
-        findViewById(R.id.mDetail).setOnClickListener(v -> {
-            rvAyat.setVisibility(isDetail ? View.VISIBLE : View.GONE);
-            findViewById(R.id.mDetailLayout).setVisibility(isDetail ? View.GONE : View.VISIBLE);
-            ivIcon.setImageResource(isDetail ? R.drawable.ic_file : android.R.drawable.ic_menu_close_clear_cancel);
-            isDetail = !isDetail;
-        });
+        initID();
+        initClick();
+        initData();
+    }
 
-        tvSurat = findViewById(R.id.mSurat);
-        rvAyat = findViewById(R.id.mAyat);
-        rvAyat.setLayoutManager(new CustomLinearLayoutManager(this));
-
-        tvDeskripsi = findViewById(R.id.mDeskripsi);
-        rvAudio = findViewById(R.id.mAudioFull);
-        rvAudio.setLayoutManager(new CustomLinearLayoutManager(this));
-
+    private void initData() {
+        spAlQuran = getSharedPreferences("Al Qur'an", MODE_PRIVATE);
         surat();
         detailSurat();
+        sPengisiSuara.setAdapter(new ArrayAdapter<>(this, R.layout.custom_spinner, qori));
+        sPengisiSuara.setSelection(spAlQuran.getInt("Pengisi Suara", 0));
+        sUkuranFont.setAdapter(new ArrayAdapter<>(this, R.layout.custom_spinner, ukuranFont));
+        sUkuranFont.setSelection(spAlQuran.getInt("Ukuran Font", 0));
+    }
+
+    private void initClick() {
+        findViewById(R.id.mBack).setOnClickListener(v -> {
+            iSurat--;
+            if (iSurat == 0) iSurat = 114;
+            ubahSurat();
+        });
+        findViewById(R.id.mNext).setOnClickListener(v -> {
+            iSurat++;
+            if (iSurat == 115) iSurat = 1;
+            ubahSurat();
+        });
+        findViewById(R.id.mBeranda).setOnClickListener(v -> setLayout(0));
+        findViewById(R.id.mDetail).setOnClickListener(v -> setLayout(1));
+        findViewById(R.id.mSettings).setOnClickListener(v -> setLayout(2));
+        sPengisiSuara.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                spAlQuran.edit().putInt("Pengisi Suara", position).apply();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+        sUkuranFont.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                spAlQuran.edit().putInt("Ukuran Font", position).apply();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+    }
+
+    private void setLayout(int i) {
+        nsvAyatLayout.setVisibility(i == 0 ? View.VISIBLE : View.GONE);
+        findViewById(R.id.mDetailLayout).setVisibility(i == 1 ? View.VISIBLE : View.GONE);
+        findViewById(R.id.mSettingsLayout).setVisibility(i == 2 ? View.VISIBLE : View.GONE);
+    }
+
+    private void initID() {
+        pbLoad = findViewById(R.id.mLoading);
+        nsvAyatLayout = findViewById(R.id.mAyatLayout);
+        tvSurat = findViewById(R.id.mSurat);
+        rvAyat = findViewById(R.id.mAyat);
+        tvDeskripsi = findViewById(R.id.mDeskripsi);
+        rvAudio = findViewById(R.id.mAudioFull);
+        sPengisiSuara = findViewById(R.id.mPengisiSuara);
+        sUkuranFont = findViewById(R.id.mUkuranFont);
+    }
+
+    private void ubahSurat() {
+        surat();
+        detailSurat();
+        if (epAudioFull != null) epAudioFull.stop();
+        if (epAudioPartial != null) epAudioPartial.stop();
     }
 
     private void surat() {
@@ -125,7 +177,7 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
                     // Set to Data
                     try {
                         JSONArray jsonArray = new JSONObject(response).getJSONArray("data");
-                        audio = String.valueOf(jsonArray.getJSONObject(i - 1).getJSONObject("audioFull"));
+                        audio = String.valueOf(jsonArray.getJSONObject(iSurat - 1).getJSONObject("audioFull"));
                         ArrayList<JSONObject> jsonObjectArrayList = new ArrayList<>();
                         for (int a = 0; a < jsonArray.length(); a++) jsonObjectArrayList.add(jsonArray.getJSONObject(a));
                         runOnUiThread(() -> {
@@ -155,8 +207,7 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
                                     @Override
                                     public void afterTextChanged(Editable editable) {
                                         suratAdapter.getFilter().filter(editable);
-                                        if (editable.toString().isEmpty()) llClear.setVisibility(View.GONE);
-                                        else llClear.setVisibility(View.VISIBLE);
+                                        llClear.setVisibility(editable.toString().isEmpty() ? View.GONE : View.VISIBLE);
                                     }
                                 });
 
@@ -181,7 +232,8 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
-                            AudioAdapter audioAdapter = new AudioAdapter(stringArrayList, MainActivity.this);
+                            AudioAdapter audioAdapter = new AudioAdapter(stringArrayList);
+                            rvAudio.setLayoutManager(new CustomLinearLayoutManager(MainActivity.this));
                             rvAudio.setAdapter(audioAdapter);
                             audioAdapter.setClickListener(MainActivity.this);
                         });
@@ -205,7 +257,7 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
     private void detailSurat() {
         pbLoad.setVisibility(View.VISIBLE);
         try {
-            new Client().getOkHttpClient(BASE_URL + i, new Client.OKHttpNetwork() {
+            new Client().getOkHttpClient(BASE_URL + iSurat, new Client.OKHttpNetwork() {
                 @Override
                 public void onSuccess(String response) {
                     // Set to Data
@@ -215,32 +267,32 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
                         deskripsi = jsonObject.getString("deskripsi");
                         JSONArray jsonArray = jsonObject.getJSONArray("ayat");
                         ArrayList<JSONObject> jsonObjectArrayList = new ArrayList<>();
-                        SharedPreferences spBasmalah = getSharedPreferences("Al Qur'an", MODE_PRIVATE);
                         if (namaLatin.equals("Al-Fatihah")) {
                             isAlFatihah = true;
                             isBasmalah = true;
-                            spBasmalah.edit().putString("basmalah", String.valueOf(jsonArray.getJSONObject(0))).apply();
-                            for (int a = 0; a < jsonArray.length(); a++) jsonObjectArrayList.add(jsonArray.getJSONObject(a));
+                            spAlQuran.edit().putString("Basmalah", String.valueOf(jsonArray.getJSONObject(0))).apply();
                         } else if (namaLatin.equals("At-Taubah")) {
                             isAlFatihah = false;
                             isBasmalah = false;
-                            for (int a = 0; a < jsonArray.length(); a++) jsonObjectArrayList.add(jsonArray.getJSONObject(a));
                         } else {
                             isAlFatihah = false;
                             isBasmalah = true;
-                            jsonObjectArrayList.add(new JSONObject(spBasmalah.getString("basmalah", "")));
-                            for (int a = 0; a < jsonArray.length(); a++) jsonObjectArrayList.add(jsonArray.getJSONObject(a));
+                            jsonObjectArrayList.add(new JSONObject(spAlQuran.getString("Basmalah", "")));
                         }
+                        for (int a = 0; a < jsonArray.length(); a++) jsonObjectArrayList.add(jsonArray.getJSONObject(a));
                         runOnUiThread(() -> {
                             tvSurat.setText(namaLatin);
                             pbLoad.setVisibility(View.GONE);
+                            rvAyat.setLayoutManager(new CustomLinearLayoutManager(MainActivity.this));
                             rvAyat.setAdapter(new AyatAdapter(jsonObjectArrayList));
+                            nsvAyatLayout.smoothScrollTo(0, 0);
                             // Set Deskripsi
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) tvDeskripsi.setText(Html.fromHtml(deskripsi, Html.FROM_HTML_MODE_COMPACT));
                             else tvDeskripsi.setText(Html.fromHtml(deskripsi));
                         });
                     } catch (JSONException e) {
                         e.printStackTrace();
+                        Toast.makeText(MainActivity.this, "Gagal: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }
 
@@ -265,20 +317,19 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
     @Override
     public void onBackPressed() {
         if (doubleBackToExit) finishAndRemoveTask();
-
         doubleBackToExit = true;
         Toast.makeText(this, "Tekan sekali lagi untuk keluar dari aplikasi", Toast.LENGTH_SHORT).show();
-
         new Handler(Looper.getMainLooper()).postDelayed(() -> doubleBackToExit = false, 2000);
     }
 
     @Override
     public void onItemClick(JSONObject jsonObject) {
         try {
-            i = jsonObject.getInt("nomor");
+            iSurat = jsonObject.getInt("nomor");
             surat();
             detailSurat();
-            if (exoPlayer != null) exoPlayer.stop();
+            if (epAudioFull != null) epAudioFull.stop();
+            if (epAudioPartial != null) epAudioPartial.stop();
             dSurat.dismiss();
         } catch (JSONException e) {
             e.printStackTrace();
@@ -291,12 +342,7 @@ public class MainActivity extends Activity implements SuratAdapter.ItemClickList
         textViewArrayList = new ArrayList<>(tvd);
         progressBarArrayList = new ArrayList<>(pbd);
         iPosition = position;
-        if (position == 0) qori = "Abdullah Al-Juhany";
-        if (position == 1) qori = "Abdul Muhsin Al-Qasim";
-        if (position == 2) qori = "Abdurrahman as-Sudais";
-        if (position == 3) qori = "Ibrahim Al-Dossari";
-        if (position == 4) qori = "Misyari Rasyid Al-Afasi";
-        namaFile = namaLatin + "_" + qori + ".mp3";
+        namaFile = namaLatin + "_" + qori[position] + ".mp3";
         new DownloadFileFromURL().execute(s);
     }
 

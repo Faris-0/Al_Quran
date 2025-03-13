@@ -10,8 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/white"
-        android:orientation="horizontal"
-        android:clickable="true">
+        android:orientation="horizontal">
 
         <View
             android:layout_width="@dimen/_3sdp"
@@ -31,12 +30,12 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:layout_width="@dimen/_80sdp"
+                    android:layout_width="@dimen/_85sdp"
                     android:layout_height="wrap_content"
                     android:text="Pengisi Suara"
                     android:textStyle="bold"
                     android:textColor="@color/colorAccent"
-                    android:textSize="@dimen/_12ssp"
+                    android:textSize="@dimen/_13ssp"
                     android:maxLines="1"
                     android:ellipsize="end" />
 
@@ -45,14 +44,14 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/_4sdp"
                     android:text=":"
-                    android:textSize="@dimen/_12ssp" />
+                    android:textSize="@dimen/_13ssp" />
 
                 <TextView
                     android:id="@+id/aQori"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/colorAccent"
-                    android:textSize="@dimen/_12ssp"
+                    android:textSize="@dimen/_13ssp"
                     android:maxLines="3"
                     android:ellipsize="end" />
             </LinearLayout>

@@ -1,5 +1,8 @@
 package com.yuuna.alquran.adapter;
 
+import static com.yuuna.alquran.adapter.AyatAdapter.epAudioPartial;
+import static com.yuuna.alquran.MainActivity.qori;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,17 +31,15 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.Holder> {
     private ArrayList<TextView> textViewDataList = new ArrayList<>();
     private ArrayList<ProgressBar> progressBarDataList = new ArrayList<>();
 
-    private Context mContext;
     private ItemClickListener clickListener;
-    public static ExoPlayer exoPlayer;
+    public static ExoPlayer epAudioFull;
 
     private Long lPosition;
     private Integer iPause;
     private Boolean isPlaying = false;
 
-    public AudioAdapter(ArrayList<String> stringArrayList, Context context) {
+    public AudioAdapter(ArrayList<String> stringArrayList) {
         this.stringDataList = stringArrayList;
-        this.mContext = context;
     }
 
     @Override
@@ -48,24 +49,21 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.Holder> {
 
     @Override
     public void onBindViewHolder(Holder holder, int position) {
-        exoPlayer = new ExoPlayer.Builder(mContext).build();
-        if (position == 0) holder.tvQori.setText("Abdullah Al-Juhany");
-        if (position == 1) holder.tvQori.setText("Abdul Muhsin Al-Qasim");
-        if (position == 2) holder.tvQori.setText("Abdurrahman as-Sudais");
-        if (position == 3) holder.tvQori.setText("Ibrahim Al-Dossari");
-        if (position == 4) holder.tvQori.setText("Misyari Rasyid Al-Afasi");
+        epAudioFull = new ExoPlayer.Builder(holder.itemView.getContext()).build();
+        holder.tvQori.setText(qori[position]);
         iconDataList.add(holder.ivIcon);
         linearLayoutDataList.add(holder.llPercent);
         textViewDataList.add(holder.tvProgress);
         progressBarDataList.add(holder.pbLoading);
         holder.llAudio.setOnClickListener(v -> {
+            if (epAudioPartial != null) epAudioPartial.stop();
             if (isPlaying) {
                 isPlaying = false;
-                lPosition = exoPlayer.getCurrentPosition();
-                exoPlayer.stop();
+                lPosition = epAudioFull.getCurrentPosition();
+                epAudioFull.stop();
                 if (!booleanDataList.get(position)) {
                     isPlaying = true;
-                    setPlayer(position);
+                    setPlayer(position, holder.itemView.getContext());
                 } else {
                     isPlaying = false;
                     booleanDataList = new ArrayList<>();
@@ -79,36 +77,36 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.Holder> {
                 if (iPause != null) {
                     if (iPause != position) {
                         iPause = position;
-                        setPlayer(position);
+                        setPlayer(position, holder.itemView.getContext());
                     } else {
                         iPause = position;
-                        setPlayer(position);
-                        exoPlayer.seekTo(lPosition);
+                        setPlayer(position, holder.itemView.getContext());
+                        epAudioFull.seekTo(lPosition);
                     }
                 } else {
                     iPause = position;
-                    setPlayer(position);
+                    setPlayer(position, holder.itemView.getContext());
                 }
             }
         });
     }
 
-    private void setPlayer(Integer position) {
+    private void setPlayer(Integer position, Context context) {
         booleanDataList = new ArrayList<>();
         for (int i = 0; i < stringDataList.size(); i++) {
             booleanDataList.add(position == i);
             iconDataList.get(i).setImageResource(position == i ? R.drawable.ic_pause : R.drawable.ic_play);
         }
-        exoPlayer.stop();
-        exoPlayer = new ExoPlayer.Builder(mContext).build();
-        exoPlayer.addMediaItem(MediaItem.fromUri(stringDataList.get(position)));
-        exoPlayer.prepare();
-        exoPlayer.setPlayWhenReady(true);
-        exoPlayer.addListener(new Player.Listener() {
+        epAudioFull.stop();
+        epAudioFull = new ExoPlayer.Builder(context).build();
+        epAudioFull.setMediaItem(MediaItem.fromUri(stringDataList.get(position)));
+        epAudioFull.prepare();
+        epAudioFull.setPlayWhenReady(true);
+        epAudioFull.addListener(new Player.Listener() {
             @Override
             public void onEvents(Player player, Player.Events events) {
                 Player.Listener.super.onEvents(player, events);
-                if (exoPlayer.getPlaybackState() == Player.STATE_ENDED) {
+                if (epAudioFull.getPlaybackState() == Player.STATE_ENDED) {
                     booleanDataList = new ArrayList<>();
                     for (int i = 0; i < stringDataList.size(); i++) {
                         booleanDataList.add(false);
